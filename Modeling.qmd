@@ -1,0 +1,95 @@
+# Introduction
+In this file we will be exploring models to properly fit the diabetes data. The techniques we will be using are logistic regression, classification, and random forest. Using these fits we will evaluate the fit of each method and decide on the best one.
+
+#Log-loss
+To create models we are going to use log-loss as a metric to evaluate. Upon research into the log-loss metric, it is defined as, "Log-loss is indicative of how close the prediction probability is to the corresponding actual/true value (0 or 1 in case of binary classification). The more the predicted probability diverges from the actual value, the higher is the log-loss value." (Dembla, 2020) For a singular log-loss value use the equation: -(yln(p)+(1-y)ln(1-p)). Where y is a given observed value and p is the prediction probability of that observed value. By taking the sum over the sample size and divide by the sample size we observe our log-loss metric for the model. A perfect model has a 0 log-loss score. We prefer this when using a binary response variable because,"Unlike other metrics such as accuracy, Log Loss takes into account the uncertainty of predictions by penalizing models more heavily for confidently incorrect predictions." (DataScience-ProF, 2024) Information for this section was developed using <https://towardsdatascience.com/intuition-behind-log-loss-score-4e0c9979680a> and <https://medium.com/@TheDataScience-ProF/understanding-log-loss-a-comprehensive-guide-with-code-examples-c79cf5411426>. 
+
+#Split data
+In this section we will partition our data into a train and test set using 70% and 30%, respectfully.
+```{r}
+#read in library and set seed for reproducibility
+library(caret)
+library(Metrics)
+set.seed(15)
+
+#Split data
+split <- createDataPartition(y = diabetes$Diabetes_binary, p = 0.7, list = FALSE)
+train <- diabetes[split, ]
+test <- diabetes[-split, ]
+```
+
+#Logistic Regression
+Logistic regression is a model that is helpful when you have a binary response variables, therefore a proper method to use here. Logistic regression models use the probability of success to model the data. We will investigate the probability of having pre-diabetes using three different models. 
+```{r}
+#NEEDS FIXING
+#First model: all predictors
+lr_fit1<-train(Diabetes_binary~.,
+               data=train,
+               method="glm",
+               family="binomial",
+               metric="logLoss",
+               trControl=trainControl(method="cv",
+                                      number=5,
+                                      summaryFunction = logLoss))
+
+lr_fit1
+
+lr_fit2<-train(Diabetes_binary~.+Age:Sex,
+               data=train,
+               method="glm",
+               family="binomial",
+               metric="logLoss",
+               trControl=trainControl(method="cv",
+                                      number=5,
+                                      summaryFunction = logLoss))
+
+lr_fit2
+
+lr_fit3<-train(Diabetes_binary~.+BMI:PhysActivity,
+               data=train,
+               method="glm",
+               family="binomial",
+               metric="logLoss",
+               trControl=trainControl(method="cv",
+                                      number=5,
+                                      summaryFunction = logLoss))
+
+lr_fit3
+```
+
+#Classification Trees
+Classification trees are method to classify a group. This is fitting here as we can use it to classify No or pre-diabetes.
+```{r}
+ct_fit<-train(Diabetes_binary~.,
+              data = train,
+              method = "rpart",
+              metric="logLoss",
+              trControl = trainControl(method = "cv",
+              number = 5),
+              preProcess = c("center", "scale"),
+              tuneGrid = data.frame(cp = seq(0, 0.1, 0.01)))
+
+ct_fit
+```
+
+# Random Forest
+Random forest is a method of classification tree but using an average of bootstrap sample's trees but each tree uses a random subset of predictors. It is applicable here because we have lots of predictors for the binary response variable.
+```{r}
+rf_fit<-train(Diabetes_binary~.,
+              data = train,
+              method = "rf",
+              metric= "logLoss",
+              trControl = trainControl(method = "cv",
+              number = 5),
+              preProcess = c("center", "scale"),
+              tuneGrid = data.frame(mtry = 1:8))
+
+rf_fit
+```
+
+# Best Model
+We now have three best models and will be fitting them under the test set to determine the best model overall.
+```{r}
+
+```
+
